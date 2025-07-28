@@ -1,0 +1,370 @@
+/* Genel Stiller */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+}
+
+/* Gerçek Kamyon PNG Görseli */
+.truck-visual {
+    width: 60px;
+    height: 35px;
+    position: relative;
+    background-image: url('/img/truck.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    transition: transform 0.3s ease, filter 0.6s ease;
+}
+
+.truck-visual:hover {
+    transform: scale(1.1);
+}
+
+/* Büyük Kamyon PNG Görseli (Detay sayfası için) */
+.truck-container-visual {
+    position: relative;
+    width: 200px;
+    height: 120px;
+    background-image: url('/img/truck.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    margin: 0 auto 20px auto;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out, filter 0.8s ease;
+}
+
+/* Küçük Kamyon PNG Görseli (Dashboard kartları için) */
+.truck-visual-small {
+    width: 50px;
+    height: 30px;
+    position: relative;
+    background-image: url('/img/truck.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out, filter 0.6s ease;
+}
+
+/* Renk Overlay Sistemi */
+.truck-visual-small::before,
+.truck-container-visual::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-image: url('/img/truck.png');
+    mix-blend-mode: multiply;
+    transition: opacity 0.6s ease;
+    opacity: 0;
+}
+
+/* Doluluk Renk Filtreleri - Küçük Kamyon */
+.truck-visual-small.fullness-0::before { 
+    background-color: #BDC3C7; 
+    opacity: 0.3; 
+}
+.truck-visual-small.fullness-10::before { 
+    background-color: #E74C3C; 
+    opacity: 0.4; 
+}
+.truck-visual-small.fullness-20::before { 
+    background-color: #E67E22; 
+    opacity: 0.45; 
+}
+.truck-visual-small.fullness-30::before { 
+    background-color: #F39C12; 
+    opacity: 0.5; 
+}
+.truck-visual-small.fullness-40::before { 
+    background-color: #F1C40F; 
+    opacity: 0.55; 
+}
+.truck-visual-small.fullness-50::before { 
+    background-color: #F4D03F; 
+    opacity: 0.6; 
+}
+.truck-visual-small.fullness-60::before { 
+    background-color: #F7DC6F; 
+    opacity: 0.65; 
+}
+.truck-visual-small.fullness-70::before { 
+    background-color: #85C1E9; 
+    opacity: 0.7; 
+}
+.truck-visual-small.fullness-80::before { 
+    background-color: #52BE80; 
+    opacity: 0.75; 
+}
+.truck-visual-small.fullness-90::before { 
+    background-color: #2ECC71; 
+    opacity: 0.8; 
+}
+.truck-visual-small.fullness-100::before { 
+    background-color: #27AE60; 
+    opacity: 0.85; 
+}
+
+/* Doluluk Renk Filtreleri - Büyük Kamyon */
+.truck-container-visual.fullness-0::before { 
+    background-color: #BDC3C7; 
+    opacity: 0.3; 
+}
+.truck-container-visual.fullness-10::before { 
+    background-color: #E74C3C; 
+    opacity: 0.4; 
+}
+.truck-container-visual.fullness-20::before { 
+    background-color: #E67E22; 
+    opacity: 0.45; 
+}
+.truck-container-visual.fullness-30::before { 
+    background-color: #F39C12; 
+    opacity: 0.5; 
+}
+.truck-container-visual.fullness-40::before { 
+    background-color: #F1C40F; 
+    opacity: 0.55; 
+}
+.truck-container-visual.fullness-50::before { 
+    background-color: #F4D03F; 
+    opacity: 0.6; 
+}
+.truck-container-visual.fullness-60::before { 
+    background-color: #F7DC6F; 
+    opacity: 0.65; 
+}
+.truck-container-visual.fullness-70::before { 
+    background-color: #85C1E9; 
+    opacity: 0.7; 
+}
+.truck-container-visual.fullness-80::before { 
+    background-color: #52BE80; 
+    opacity: 0.75; 
+}
+.truck-container-visual.fullness-90::before { 
+    background-color: #2ECC71; 
+    opacity: 0.8; 
+}
+.truck-container-visual.fullness-100::before { 
+    background-color: #27AE60; 
+    opacity: 0.85; 
+}
+
+
+
+/* Kamyon Kartları */
+.truck-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.truck-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    border-color: #007bff;
+}
+
+.truck-icon {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+/* Doluluk Göstergesi */
+.fullness-indicator .progress {
+    border-radius: 10px;
+    background-color: #e9ecef;
+}
+
+.fullness-indicator .progress-bar {
+    border-radius: 10px;
+    transition: width 0.6s ease;
+}
+
+/* İstatistik Kartları */
+.stat-item {
+    padding: 15px;
+    text-align: center;
+}
+
+.stat-item i {
+    margin-bottom: 10px;
+}
+
+/* Harita Stilleri */
+#map {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.custom-div-icon {
+    background: none;
+    border: none;
+}
+
+/* Navbar Stilleri */
+.navbar-brand {
+    font-weight: 600;
+    font-size: 1.25rem;
+}
+
+/* Card Stilleri */
+.card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+}
+
+.card-header {
+    background-color: #fff;
+    border-bottom: 1px solid #e9ecef;
+    border-radius: 12px 12px 0 0 !important;
+    font-weight: 600;
+}
+
+/* Breadcrumb Stilleri */
+.breadcrumb {
+    background-color: transparent;
+    padding: 0;
+    margin-bottom: 1.5rem;
+}
+
+.breadcrumb-item a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.breadcrumb-item.active {
+    color: #6c757d;
+}
+
+/* Tablo Stilleri */
+.table {
+    margin-bottom: 0;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+    color: #495057;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+/* Badge Stilleri */
+.badge {
+    font-size: 0.75rem;
+    padding: 0.5em 0.75em;
+}
+
+/* Progress Bar Stilleri */
+.progress {
+    background-color: #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+/* Responsive Tasarım */
+@media (max-width: 768px) {
+    .truck-card {
+        margin-bottom: 1rem;
+    }
+    
+    .stat-item {
+        margin-bottom: 1rem;
+    }
+    
+    #map {
+        height: 300px !important;
+    }
+}
+
+/* Animasyonlar */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.card {
+    animation: fadeIn 0.6s ease-out;
+}
+
+/* Özel Renkler */
+.text-primary {
+    color: #007bff !important;
+}
+
+.bg-primary {
+    background-color: #007bff !important;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+}
+
+/* Form Stilleri */
+.form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.input-group-text {
+    background-color: #f8f9fa;
+    border-color: #ced4da;
+}
+
+/* Alert Stilleri */
+.alert {
+    border-radius: 8px;
+    border: none;
+}
+
+/* Loading Animasyonu */
+.loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #007bff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

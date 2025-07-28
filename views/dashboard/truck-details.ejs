@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= truck.name %> - Çöp Kamyonu Detayları</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="fas fa-truck me-2"></i>
+                Çöp Kamyonu İzleme
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3">
+                    <i class="fas fa-user me-1"></i>
+                    <%= user.username %>
+                </span>
+                <a class="nav-link" href="/auth/logout">
+                    <i class="fas fa-sign-out-alt me-1"></i>
+                    Çıkış
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid py-4">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+                <li class="breadcrumb-item active"><%= truck.name %></li>
+            </ol>
+        </nav>
+
+        <div class="row">
+            <!-- Kamyon Bilgileri -->
+            <div class="col-lg-4">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-truck me-2"></i>
+                            <%= truck.name %> Bilgileri
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Kamyon Görseli -->
+                        <div class="text-center mb-4">
+                            <div class="truck-container-visual fullness-<%= Math.floor(truck.fullness / 10) * 10 %>"></div>
+                            <small class="text-muted">Doluluk: <%= truck.fullness %>% (<%= wasteWeight %> ton)</small>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <strong>Plaka:</strong>
+                                <p class="text-muted"><%= truck.plate %></p>
+                            </div>
+                            <div class="col-6">
+                                <strong>Durum:</strong>
+                                <p>
+                                    <span class="badge <%= truck.status === 'active' ? 'bg-success' : 'bg-warning' %>">
+                                        <%= truck.status === 'active' ? 'Aktif' : 'Bakım' %>
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <strong>Konum:</strong>
+                                <p class="text-muted"><%= truck.location %></p>
+                            </div>
+                            <div class="col-6">
+                                <strong>Son Güncelleme:</strong>
+                                <p class="text-muted"><%= truck.lastUpdate %></p>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <strong>Güzergah:</strong>
+                            <p class="text-muted"><%= truck.route %></p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <strong>Çalışma Süresi:</strong>
+                            <p class="text-muted"><%= truck.workingHours %> saat</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <strong>Doluluk Oranı:</strong>
+                                <div class="text-end">
+                                    <span class="badge bg-primary"><%= wasteWeight %> / <%= truckCapacity %> ton</span>
+                                </div>
+                            </div>
+                            <div class="progress mt-2" style="height: 20px;">
+                                <div class="progress-bar-truck" data-fullness="<%= truck.fullness %>" data-status="<%= truck.status %>">
+                                    <%= truck.fullness %>%
+                                </div>
+                            </div>
+                            <small class="text-muted mt-1">Mevcut Çöp Ağırlığı: <%= wasteWeight %> ton</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- İstatistikler -->
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-chart-bar me-2"></i>
+                            Günlük İstatistikler
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <div class="stat-item">
+                                    <i class="fas fa-route text-primary fa-2x mb-2"></i>
+                                    <h5 class="mb-0">150 km</h5>
+                                    <small class="text-muted">Toplam Mesafe</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="stat-item">
+                                    <i class="fas fa-trash text-success fa-2x mb-2"></i>
+                                    <h5 class="mb-0">25</h5>
+                                    <small class="text-muted">Toplanan Nokta</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="stat-item">
+                                    <i class="fas fa-weight text-warning fa-2x mb-2"></i>
+                                    <h5 class="mb-0"><%= wasteWeight %> ton</h5>
+                                    <small class="text-muted">Toplanan Çöp</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Harita -->
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-map me-2"></i>
+                            Canlı Konum ve Güzergah
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="map" style="height: 500px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Durak Noktaları -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-map-marker-alt me-2"></i>
+                            Durak Noktaları ve Toplama Zamanları
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Konum</th>
+                                        <th>Varış Zamanı</th>
+                                        <th>Çıkış Zamanı</th>
+                                        <th>Toplanan Miktar</th>
+                                        <th>Durum</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>1</td>
+                                        <td>Kadıköy Merkez</td>
+                                        <td>08:30</td>
+                                        <td>08:45</td>
+                                        <td><%= (wasteWeight * 0.25).toFixed(1) %> ton</td>
+                                        <td><span class="badge bg-success">Tamamlandı</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>2</td>
+                                        <td>Üsküdar Sahil</td>
+                                        <td>09:15</td>
+                                        <td>09:30</td>
+                                        <td><%= (wasteWeight * 0.20).toFixed(1) %> ton</td>
+                                        <td><span class="badge bg-success">Tamamlandı</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>3</td>
+                                        <td>Maltepe Pazar</td>
+                                        <td>10:00</td>
+                                        <td>10:20</td>
+                                        <td><%= (wasteWeight * 0.35).toFixed(1) %> ton</td>
+                                        <td><span class="badge bg-success">Tamamlandı</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>4</td>
+                                        <td>Pendik Merkez</td>
+                                        <td>11:00</td>
+                                        <td>11:25</td>
+                                        <td><%= (wasteWeight * 0.20).toFixed(1) %> ton</td>
+                                        <td><span class="badge bg-warning">Devam Ediyor</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>5</td>
+                                        <td>Kartal Sahil</td>
+                                        <td>12:00</td>
+                                        <td>-</td>
+                                        <td>-</td>
+                                        <td><span class="badge bg-secondary">Bekliyor</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Progress bar'ı JavaScript ile ayarla
+        document.addEventListener('DOMContentLoaded', function() {
+            const progressBars = document.querySelectorAll('.progress-bar-truck');
+            progressBars.forEach(bar => {
+                const fullness = parseInt(bar.getAttribute('data-fullness'));
+                const status = bar.getAttribute('data-status');
+                
+                // CSS sınıfını belirle
+                let colorClass = 'bg-success';
+                if (fullness > 80) colorClass = 'bg-danger';
+                else if (fullness > 60) colorClass = 'bg-warning';
+                
+                // Style ve class ekle
+                bar.className = 'progress-bar ' + colorClass;
+                bar.style.width = fullness + '%';
+            });
+
+            // Kamyon görselinin doluluk animasyonunu başlat
+            const truckContainer = document.querySelector('.truck-container-visual');
+            if (truckContainer) {
+                setTimeout(() => {
+                    truckContainer.style.opacity = '1';
+                }, 300);
+            }
+        });
+        
+        // Harita başlatma
+        const map = L.map('map').setView([40.9862, 29.1244], 10);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+        
+        // Temsili rota noktaları
+        const routePoints = [
+            [40.9862, 29.1244, 'Kadıköy Merkez'],
+            [41.0277, 29.0153, 'Üsküdar Sahil'],
+            [40.9311, 29.1289, 'Maltepe Pazar'],
+            [40.8778, 29.2333, 'Pendik Merkez'],
+            [40.9033, 29.1897, 'Kartal Sahil']
+        ];
+        
+        // Rota çizgisi
+        const routeLine = L.polyline(routePoints.map(point => [point[0], point[1]]), {
+            color: 'blue',
+            weight: 3,
+            opacity: 0.7
+        }).addTo(map);
+        
+        // Durak noktaları
+        routePoints.forEach((point, index) => {
+            const marker = L.marker([point[0], point[1]]).addTo(map);
+            marker.bindPopup(`<b>${point[2]}</b><br>Durak ${index + 1}`);
+        });
+        
+        // Mevcut konum
+        const currentLocation = L.marker([40.9862, 29.1244], {
+            icon: L.divIcon({
+                className: 'custom-div-icon',
+                html: '<i class="fas fa-truck" style="color: red; font-size: 20px;"></i>',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            })
+        }).addTo(map);
+        currentLocation.bindPopup('<b>Mevcut Konum</b><br>Kadıköy Merkez');
+    </script>
+</body>
+</html> 
