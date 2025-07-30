@@ -14,9 +14,13 @@
         <div class="container">
             <a class="navbar-brand" href="/dashboard">
                 <i class="fas fa-truck me-2"></i>
-                Çöp Kamyonu İzleme
+                Başiskele Çöp Kamyonu İzleme
             </a>
             <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3">
+                    <i class="fas fa-map-marker-alt me-1"></i>
+                    Kocaeli - Başiskele
+                </span>
                 <span class="navbar-text me-3">
                     <i class="fas fa-user me-1"></i>
                     <%= user.username %>
@@ -30,7 +34,7 @@
     </nav>
 
     <div class="container-fluid py-4">
-        <!-- İstatistikler -->
+        <!-- Ana İstatistikler -->
         <div class="row mb-4">
             <div class="col">
                 <div class="card bg-primary text-white">
@@ -52,7 +56,7 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-between">
                             <div>
-                                <h4 class="mb-0"><%= trucks.filter(t => t.status === 'active').length %></h4>
+                                <h4 class="mb-0"><%= activeTrucks %></h4>
                                 <small>Aktif Kamyon</small>
                             </div>
                             <div class="align-self-center">
@@ -109,15 +113,78 @@
             </div>
         </div>
 
-        <!-- Kamyonlar -->
-        <div class="row">
+        <!-- Konteynır İstatistikleri -->
+        <div class="row mb-4">
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
                         <h5 class="mb-0">
-                            <i class="fas fa-truck me-2"></i>
-                            Kamyon Listesi
+                            <i class="fas fa-trash me-2"></i>
+                            Günlük Konteynır İstatistikleri
                         </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-2">
+                                <div class="stat-item">
+                                    <i class="fas fa-list text-primary fa-2x mb-2"></i>
+                                    <h4 class="mb-0 text-primary"><%= dailyStats.totalContainers %></h4>
+                                    <small class="text-muted">Toplam Konteynır</small>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="stat-item">
+                                    <i class="fas fa-check-double text-success fa-2x mb-2"></i>
+                                    <h4 class="mb-0 text-success"><%= dailyStats.completedContainers %></h4>
+                                    <small class="text-muted">Tamamlanan</small>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="stat-item">
+                                    <i class="fas fa-spinner text-warning fa-2x mb-2"></i>
+                                    <h4 class="mb-0 text-warning"><%= dailyStats.inProgressContainers %></h4>
+                                    <small class="text-muted">Devam Eden</small>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="stat-item">
+                                    <i class="fas fa-clock text-secondary fa-2x mb-2"></i>
+                                    <h4 class="mb-0 text-secondary"><%= dailyStats.pendingContainers %></h4>
+                                    <small class="text-muted">Bekleyen</small>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="stat-item">
+                                    <i class="fas fa-weight text-info fa-2x mb-2"></i>
+                                    <h4 class="mb-0 text-info"><%= (dailyStats.totalWasteCollected / 1000).toFixed(1) %></h4>
+                                    <small class="text-muted">Toplanan (ton)</small>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="stat-item">
+                                    <i class="fas fa-chart-line text-success fa-2x mb-2"></i>
+                                    <h4 class="mb-0 text-success"><%= dailyStats.completionRate.toFixed(1) %>%</h4>
+                                    <small class="text-muted">Tamamlanma</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kamyonlar -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-truck me-2"></i>
+                            Başiskele Kamyon Filosu
+                        </h5>
+                        <div class="text-muted">
+                            <small><i class="fas fa-map-marker-alt me-1"></i>Emir Sultan & Millet Caddeleri</small>
+                        </div>
                     </div>
                     <div class="card-body">
                         <div class="row">
@@ -129,9 +196,13 @@
                                                 <div class="me-3">
                                                     <div class="truck-visual-small fullness-<%= Math.floor(truck.fullness / 10) * 10 %>"></div>
                                                 </div>
-                                                <div>
+                                                <div class="flex-grow-1">
                                                     <h6 class="mb-1"><%= truck.name %></h6>
                                                     <small class="text-muted"><%= truck.plate %></small>
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-user-circle me-1"></i><%= truck.driver %>
+                                                    </small>
                                                 </div>
                                                 <div class="ms-auto">
                                                     <span class="badge <%= truck.status === 'active' ? 'bg-success' : 'bg-warning' %>">
@@ -140,7 +211,7 @@
                                                 </div>
                                             </div>
                                             
-                                            <div class="row text-center">
+                                            <div class="row text-center mb-3">
                                                 <div class="col-4">
                                                     <div class="fullness-indicator">
                                                         <div class="progress mb-2" style="height: 8px;">
@@ -152,13 +223,35 @@
                                                 <div class="col-4">
                                                     <div>
                                                         <i class="fas fa-weight text-warning"></i>
-                                                        <small class="text-muted d-block"><%= ((truck.fullness * truckCapacity) / 100).toFixed(1) %> ton</small>
+                                                        <small class="text-muted d-block"><%= ((truck.fullness * truckCapacity) / 100 / 1000).toFixed(1) %> ton</small>
                                                     </div>
                                                 </div>
                                                 <div class="col-4">
                                                     <div>
                                                         <i class="fas fa-clock text-info"></i>
                                                         <small class="text-muted d-block"><%= truck.workingHours %> saat</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Ek Bilgiler -->
+                                            <div class="row text-center mb-3">
+                                                <div class="col-4">
+                                                    <div>
+                                                        <i class="fas fa-gas-pump text-primary"></i>
+                                                        <small class="text-muted d-block"><%= truck.fuelLevel %>% Yakıt</small>
+                                                    </div>
+                                                </div>
+                                                <div class="col-4">
+                                                    <div>
+                                                        <i class="fas fa-tachometer-alt text-success"></i>
+                                                        <small class="text-muted d-block"><%= truck.speed %> km/h</small>
+                                                    </div>
+                                                </div>
+                                                <div class="col-4">
+                                                    <div>
+                                                        <i class="fas fa-trash-alt text-warning"></i>
+                                                        <small class="text-muted d-block"><%= truck.collectedContainers %>/<%= truck.totalContainers %></small>
                                                     </div>
                                                 </div>
                                             </div>
@@ -173,6 +266,11 @@
                                                     <i class="fas fa-route me-1"></i>
                                                     <%= truck.route %>
                                                 </small>
+                                                <br>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-flag-checkered me-1"></i>
+                                                    Sonraki: <%= truck.nextStop %>
+                                                </small>
                                             </div>
                                         </div>
                                     </div>
@@ -183,9 +281,44 @@
                 </div>
             </div>
         </div>
+
+        <!-- Hızlı Erişim Kartları -->
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <div class="card border-primary">
+                    <div class="card-body text-center">
+                        <i class="fas fa-route text-primary fa-3x mb-3"></i>
+                        <h5>Rota Planlama</h5>
+                        <p class="text-muted">Emir Sultan ve Millet caddeleri rota optimizasyonu</p>
+                        <button class="btn btn-primary btn-sm">Rotaları Görüntüle</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-success">
+                    <div class="card-body text-center">
+                        <i class="fas fa-chart-bar text-success fa-3x mb-3"></i>
+                        <h5>Konteynır Raporu</h5>
+                        <p class="text-muted">Günlük toplama raporları ve istatistikler</p>
+                        <button class="btn btn-success btn-sm">Raporları İncele</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-warning">
+                    <div class="card-body text-center">
+                        <i class="fas fa-cogs text-warning fa-3x mb-3"></i>
+                        <h5>Sistem Ayarları</h5>
+                        <p class="text-muted">Kamyon ve konteynır ayarları</p>
+                        <button class="btn btn-warning btn-sm">Ayarlara Git</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/truck-visual.js"></script>
     <script>
         // Progress bar'ları JavaScript ile ayarla
         document.addEventListener('DOMContentLoaded', function() {
@@ -210,6 +343,52 @@
                     truck.style.opacity = '1';
                 }, index * 100);
             });
+
+            // İstatistik kartlarına hover efekti
+            const statItems = document.querySelectorAll('.stat-item');
+            statItems.forEach(item => {
+                item.addEventListener('mouseenter', function() {
+                    this.style.transform = 'scale(1.05)';
+                    this.style.transition = 'transform 0.3s ease';
+                });
+                item.addEventListener('mouseleave', function() {
+                    this.style.transform = 'scale(1)';
+                });
+            });
+
+            // Kamyon kartlarına gerçek zamanlı güncelleme simülasyonu
+            setInterval(() => {
+                const activeCards = document.querySelectorAll('.truck-card:not([data-status="maintenance"])');
+                activeCards.forEach((card, cardIndex) => {
+                    const progressBar = card.querySelector('.progress-bar-dashboard');
+                    if (progressBar && Math.random() < 0.1) { // %10 şans ile güncelle
+                        const currentFullness = parseInt(progressBar.getAttribute('data-fullness'));
+                        const newFullness = Math.min(100, currentFullness + Math.floor(Math.random() * 3));
+                        progressBar.setAttribute('data-fullness', newFullness);
+                        progressBar.style.width = newFullness + '%';
+                        
+                        // Doluluk yüzdesini güncelle
+                        const fullnessText = card.querySelector('.fullness-indicator small');
+                        if (fullnessText) {
+                            fullnessText.textContent = `Doluluk: ${newFullness}%`;
+                        }
+
+                        // Yeni basit kamyon doluluk sistemini güncelle
+                        const truckVisual = card.querySelector('.truck-visual-small');
+                        if (truckVisual) {
+                            // ID yoksa oluştur
+                            if (!truckVisual.id) {
+                                truckVisual.id = `truck-card-${cardIndex}-${Date.now()}`;
+                            }
+                            
+                            // Yeni basit sistemle güncelle
+                            if (window.updateTruckFullness) {
+                                window.updateTruckFullness(`#${truckVisual.id}`, newFullness);
+                            }
+                        }
+                    }
+                });
+            }, 30000); // 30 saniyede bir güncelle
         });
     </script>
 </body>

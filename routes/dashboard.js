@@ -19,4 +19,7 @@ router.get('/', truckController.getAllTrucks);
 // Kamyon detay sayfası
 router.get('/truck/:id', truckController.getTruckDetails);
 
+// Kamyon durumu güncelleme
+router.post('/truck/:id/status', truckController.updateTruckStatusRoute);
+
 module.exports = router; 

@@ -8,6 +8,56 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="/css/style.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        .filter-container {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .filter-input {
+            margin-bottom: 10px;
+        }
+        .container-marker {
+            background-color: #dc3545;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            width: 12px;
+            height: 12px;
+        }
+        .truck-marker {
+            font-size: 18px;
+            color: #007bff;
+        }
+        .truck-marker.truck-2 {
+            color: #28a745;
+        }
+        .route-line-1 {
+            color: #007bff;
+            weight: 4;
+            opacity: 0.8;
+        }
+        .route-line-2 {
+            color: #28a745;
+            weight: 4;
+            opacity: 0.8;
+        }
+        .street-label {
+            background: rgba(255,255,255,0.9);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-update-card {
+            border: 2px solid #007bff;
+            background-color: #f8f9ff;
+        }
+        .status-btn {
+            min-width: 100px;
+            margin: 0 5px 10px 0;
+        }
+    </style>
 </head>
 <body>
     <!-- Navbar -->
@@ -63,7 +113,7 @@
                             <div class="col-6">
                                 <strong>Durum:</strong>
                                 <p>
-                                    <span class="badge <%= truck.status === 'active' ? 'bg-success' : 'bg-warning' %>">
+                                    <span class="badge <%= truck.status === 'active' ? 'bg-success' : 'bg-warning' %>" id="statusBadge">
                                         <%= truck.status === 'active' ? 'Aktif' : 'Bakım' %>
                                     </span>
                                 </p>
@@ -81,21 +131,38 @@
                             </div>
                         </div>
                         
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <strong>Sürücü:</strong>
+                                <p class="text-muted"><%= truck.driver %></p>
+                            </div>
+                            <div class="col-6">
+                                <strong>Hız:</strong>
+                                <p class="text-muted"><%= truck.speed %> km/h</p>
+                            </div>
+                        </div>
+                        
                         <div class="mb-3">
                             <strong>Güzergah:</strong>
                             <p class="text-muted"><%= truck.route %></p>
                         </div>
                         
-                        <div class="mb-3">
-                            <strong>Çalışma Süresi:</strong>
-                            <p class="text-muted"><%= truck.workingHours %> saat</p>
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <strong>Çalışma Süresi:</strong>
+                                <p class="text-muted"><%= truck.workingHours %> saat</p>
+                            </div>
+                            <div class="col-6">
+                                <strong>Yakıt Seviyesi:</strong>
+                                <p class="text-muted"><%= truck.fuelLevel %>%</p>
+                            </div>
                         </div>
                         
                         <div class="mb-3">
                             <div class="d-flex justify-content-between align-items-center">
-                                <strong>Doluluk Oranı:</strong>
+                                <strong>Yük Kapasitesi:</strong>
                                 <div class="text-end">
-                                    <span class="badge bg-primary"><%= wasteWeight %> / <%= truckCapacity %> ton</span>
+                                    <span class="badge bg-primary"><%= wasteWeight %> / <%= truckCapacityTon %> ton</span>
                                 </div>
                             </div>
                             <div class="progress mt-2" style="height: 20px;">
@@ -105,6 +172,31 @@
                             </div>
                             <small class="text-muted mt-1">Mevcut Çöp Ağırlığı: <%= wasteWeight %> ton</small>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Durum Güncelleme -->
+                <div class="card mb-4 status-update-card">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-edit me-2"></i>
+                            Kamyon Durum Kontrolü
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-3">Kamyon durumunu güncelleyebilirsiniz:</p>
+                        <div class="d-flex flex-wrap">
+                            <button class="btn btn-success status-btn" onclick="updateStatus('active')">
+                                <i class="fas fa-play me-1"></i>Aktif
+                            </button>
+                            <button class="btn btn-warning status-btn" onclick="updateStatus('maintenance')">
+                                <i class="fas fa-tools me-1"></i>Bakım
+                            </button>
+                            <button class="btn btn-secondary status-btn" onclick="updateStatus('idle')">
+                                <i class="fas fa-pause me-1"></i>Beklemede
+                            </button>
+                        </div>
+                        <div id="statusUpdateMessage" class="mt-2"></div>
                     </div>
                 </div>
                 
@@ -121,15 +213,15 @@
                             <div class="col-4">
                                 <div class="stat-item">
                                     <i class="fas fa-route text-primary fa-2x mb-2"></i>
-                                    <h5 class="mb-0">150 km</h5>
+                                    <h5 class="mb-0"><%= truck.totalDistance %> km</h5>
                                     <small class="text-muted">Toplam Mesafe</small>
                                 </div>
                             </div>
                             <div class="col-4">
                                 <div class="stat-item">
                                     <i class="fas fa-trash text-success fa-2x mb-2"></i>
-                                    <h5 class="mb-0">25</h5>
-                                    <small class="text-muted">Toplanan Nokta</small>
+                                    <h5 class="mb-0"><%= truck.collectedContainers %></h5>
+                                    <small class="text-muted">Toplanan Konteyner</small>
                                 </div>
                             </div>
                             <div class="col-4">
@@ -147,14 +239,29 @@
             <!-- Harita -->
             <div class="col-lg-8">
                 <div class="card">
-                    <div class="card-header">
+                    <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">
                             <i class="fas fa-map me-2"></i>
-                            Canlı Konum ve Güzergah
+                            Kocaeli Başiskele - Canlı Konum ve Güzergah
                         </h5>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button type="button" class="btn btn-outline-primary active" id="showTruck1">
+                                <i class="fas fa-truck me-1" style="color: #007bff;"></i>Kamyon 1
+                            </button>
+                            <button type="button" class="btn btn-outline-success" id="showTruck2">
+                                <i class="fas fa-truck me-1" style="color: #28a745;"></i>Kamyon 2
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" id="showBoth">Her İkisi</button>
+                        </div>
                     </div>
                     <div class="card-body p-0">
-                        <div id="map" style="height: 500px;"></div>
+                        <div id="map" style="height: 500px;" 
+                             data-truck-id="<%= truck.id %>"
+                             data-truck-name="<%= truck.name %>"
+                             data-truck-location="<%= truck.location %>"
+                             data-truck-status="<%= truck.status %>"
+                             data-truck-lat="<%= truck.coordinates.lat %>"
+                             data-truck-lng="<%= truck.coordinates.lng %>"></div>
                     </div>
                 </div>
             </div>
@@ -167,74 +274,85 @@
                     <div class="card-header">
                         <h5 class="mb-0">
                             <i class="fas fa-map-marker-alt me-2"></i>
-                            Durak Noktaları ve Toplama Zamanları
+                            Konteynır Noktaları ve Toplama Detayları
                         </h5>
                     </div>
                     <div class="card-body">
+                        <!-- Filtre Alanı -->
+                        <div class="filter-container">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <label for="locationFilter" class="form-label">Konum Filtresi:</label>
+                                    <input type="text" class="form-control filter-input" id="locationFilter" placeholder="Konum ara...">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="minWeightFilter" class="form-label">Min. Miktar (kg):</label>
+                                    <input type="number" class="form-control filter-input" id="minWeightFilter" min="5" max="120" placeholder="5">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="maxWeightFilter" class="form-label">Max. Miktar (kg):</label>
+                                    <input type="number" class="form-control filter-input" id="maxWeightFilter" min="5" max="120" placeholder="120">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="statusFilter" class="form-label">Durum Filtresi:</label>
+                                    <select class="form-select filter-input" id="statusFilter">
+                                        <option value="">Tümü</option>
+                                        <option value="completed">Tamamlandı</option>
+                                        <option value="in-progress">Devam Ediyor</option>
+                                        <option value="pending">Bekliyor</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <button class="btn btn-primary btn-sm me-2" onclick="applyFilters()">
+                                        <i class="fas fa-filter me-1"></i>Filtrele
+                                    </button>
+                                    <button class="btn btn-secondary btn-sm" onclick="clearFilters()">
+                                        <i class="fas fa-times me-1"></i>Temizle
+                                    </button>
+                                    <span class="ms-3 text-muted">Toplam: <span id="totalCount">200</span> konteynır</span>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="table-responsive">
-                            <table class="table table-hover">
+                            <table class="table table-hover" id="stopsTable">
                                 <thead>
                                     <tr>
                                         <th>#</th>
                                         <th>Konum</th>
+                                        <th>Cadde</th>
                                         <th>Varış Zamanı</th>
                                         <th>Çıkış Zamanı</th>
-                                        <th>Toplanan Miktar</th>
+                                        <th>Toplanan Miktar (kg)</th>
+                                        <th>Kamyon</th>
                                         <th>Durum</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>1</td>
-                                        <td>Kadıköy Merkez</td>
-                                        <td>08:30</td>
-                                        <td>08:45</td>
-                                        <td><%= (wasteWeight * 0.25).toFixed(1) %> ton</td>
-                                        <td><span class="badge bg-success">Tamamlandı</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>2</td>
-                                        <td>Üsküdar Sahil</td>
-                                        <td>09:15</td>
-                                        <td>09:30</td>
-                                        <td><%= (wasteWeight * 0.20).toFixed(1) %> ton</td>
-                                        <td><span class="badge bg-success">Tamamlandı</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>3</td>
-                                        <td>Maltepe Pazar</td>
-                                        <td>10:00</td>
-                                        <td>10:20</td>
-                                        <td><%= (wasteWeight * 0.35).toFixed(1) %> ton</td>
-                                        <td><span class="badge bg-success">Tamamlandı</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>4</td>
-                                        <td>Pendik Merkez</td>
-                                        <td>11:00</td>
-                                        <td>11:25</td>
-                                        <td><%= (wasteWeight * 0.20).toFixed(1) %> ton</td>
-                                        <td><span class="badge bg-warning">Devam Ediyor</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>5</td>
-                                        <td>Kartal Sahil</td>
-                                        <td>12:00</td>
-                                        <td>-</td>
-                                        <td>-</td>
-                                        <td><span class="badge bg-secondary">Bekliyor</span></td>
-                                    </tr>
+                                <tbody id="stopsTableBody">
+                                    <!-- JavaScript ile dinamik olarak doldurulacak -->
                                 </tbody>
                             </table>
                         </div>
+                        
+                        <!-- Sayfalama -->
+                        <nav aria-label="Konteynır sayfalama">
+                            <ul class="pagination justify-content-center" id="pagination">
+                                <!-- JavaScript ile dinamik olarak doldurulacak -->
+                            </ul>
+                        </nav>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- JavaScript için truck verileri artık data attribute'larından alınacak -->
+    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/js/truck-visual.js"></script>
     <script>
         // Progress bar'ı JavaScript ile ayarla
         document.addEventListener('DOMContentLoaded', function() {
@@ -262,45 +380,391 @@
             }
         });
         
-        // Harita başlatma
-        const map = L.map('map').setView([40.9862, 29.1244], 10);
+        // Durum güncelleme fonksiyonu
+        function updateStatus(newStatus) {
+            const truckId = truckData.id;
+            const messageDiv = document.getElementById('statusUpdateMessage');
+            
+            fetch(`/dashboard/truck/${truckId}/status`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ status: newStatus })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Badge güncelle
+                    const statusBadge = document.getElementById('statusBadge');
+                    const statusText = newStatus === 'active' ? 'Aktif' : 
+                                    newStatus === 'maintenance' ? 'Bakım' : 'Beklemede';
+                    const badgeClass = newStatus === 'active' ? 'bg-success' : 
+                                    newStatus === 'maintenance' ? 'bg-warning' : 'bg-secondary';
+                    
+                    statusBadge.textContent = statusText;
+                    statusBadge.className = `badge ${badgeClass}`;
+                    
+                    // Başarı mesajı göster
+                    messageDiv.innerHTML = `<div class="alert alert-success alert-sm">
+                        <i class="fas fa-check me-1"></i>Durum başarıyla güncellendi: ${statusText}
+                    </div>`;
+                    
+                    setTimeout(() => {
+                        messageDiv.innerHTML = '';
+                    }, 3000);
+                } else {
+                    messageDiv.innerHTML = `<div class="alert alert-danger alert-sm">
+                        <i class="fas fa-exclamation-triangle me-1"></i>Hata: ${data.message}
+                    </div>`;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                messageDiv.innerHTML = `<div class="alert alert-danger alert-sm">
+                    <i class="fas fa-exclamation-triangle me-1"></i>Bağlantı hatası oluştu.
+                </div>`;
+            });
+        }
+        
+        // Map element'inden truck verilerini al
+        const mapElement = document.getElementById('map');
+        const truckData = {
+            id: mapElement.dataset.truckId,
+            name: mapElement.dataset.truckName,
+            location: mapElement.dataset.truckLocation,
+            status: mapElement.dataset.truckStatus,
+            lat: parseFloat(mapElement.dataset.truckLat),
+            lng: parseFloat(mapElement.dataset.truckLng)
+        };
+        
+        // Yeni Başiskele koordinatları - Kullanıcının belirttiği konum
+        const map = L.map('map').setView([40.702371, 29.931335], 16);
         
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
         
-        // Temsili rota noktaları
-        const routePoints = [
-            [40.9862, 29.1244, 'Kadıköy Merkez'],
-            [41.0277, 29.0153, 'Üsküdar Sahil'],
-            [40.9311, 29.1289, 'Maltepe Pazar'],
-            [40.8778, 29.2333, 'Pendik Merkez'],
-            [40.9033, 29.1897, 'Kartal Sahil']
-        ];
+        // Yeni rota koordinatları - Gerçek caddeleri takip eden güzergahlar
+        const routes = {
+            truck1Route: [
+                [40.713313, 29.932394], // Başlangıç konumu
+                [40.712834, 29.932462],
+                [40.712349, 29.932484],
+                [40.711785, 29.932566],
+                [40.711039, 29.932638],
+                [40.710175, 29.932803],
+                [40.709621, 29.932885],
+                [40.708821, 29.932773],
+                [40.708359, 29.932696],
+                [40.708357, 29.933527],
+                [40.708409, 29.934642],
+                [40.708094, 29.936617],
+                [40.707742, 29.938201],
+                [40.707277, 29.939947],
+                [40.708815, 29.940577],
+                [40.709433, 29.941398],
+                [40.709994, 29.942615],
+                [40.711657, 29.939671],
+                [40.712591, 29.937394],
+                [40.713891, 29.936500],
+                [40.714399, 29.936520],
+                [40.714858, 29.941840],
+                [40.712726, 29.941961],
+                [40.710792, 29.943275]
+            ],
+            truck2Route: [
+                [40.702874, 29.933797], // Başlangıç konumu
+                [40.703716, 29.933356],
+                [40.704137, 29.932463],
+                [40.704804, 29.931902],
+                [40.705645, 29.931998],
+                [40.707232, 29.932297],
+                [40.707106, 29.930805],
+                [40.706985, 29.930071],
+                [40.708295, 29.929816],
+                [40.709751, 29.929554],
+                [40.710476, 29.929350],
+                [40.710094, 29.926416],
+                [40.710172, 29.923915],
+                [40.710945, 29.924004]
+            ],
+            containerLocations: [
+                // 1. Kamyon güzergahı konteynırları - Yeni rota boyunca
+                [40.713200, 29.932400], [40.712900, 29.932430], [40.712600, 29.932450],
+                [40.712000, 29.932500], [40.711500, 29.932550], [40.711000, 29.932600],
+                [40.710500, 29.932750], [40.710000, 29.932800], [40.709500, 29.932850],
+                [40.708900, 29.932750], [40.708400, 29.932700], [40.708350, 29.933200],
+                [40.708380, 29.934000], [40.708200, 29.935500], [40.708000, 29.937000],
+                [40.707500, 29.938500], [40.707400, 29.939500], [40.708500, 29.940200],
+                [40.709200, 29.941000], [40.709800, 29.942000], [40.711400, 29.940000],
+                [40.712300, 29.937800], [40.713500, 29.936700], [40.714200, 29.936600],
+                [40.714500, 29.940000], [40.713000, 29.941500], [40.711200, 29.942800],
+                
+                // 2. Kamyon güzergahı konteynırları - Yeni güncellenen rota boyunca
+                [40.703000, 29.933700], [40.703600, 29.933400], [40.704000, 29.932500],
+                [40.704700, 29.932000], [40.705500, 29.932000], [40.707100, 29.932200],
+                [40.707050, 29.930900], [40.707000, 29.930100], [40.708200, 29.929800],
+                [40.709600, 29.929600], [40.710300, 29.929400], [40.710050, 29.926500],
+                [40.710150, 29.924000], [40.710800, 29.924000]
+            ],
+            connecting: [
+                [40.710000, 29.935000, 40.705000, 29.932000],
+                [40.712000, 29.940000, 40.708000, 29.929800]
+            ]
+        };
         
-        // Rota çizgisi
-        const routeLine = L.polyline(routePoints.map(point => [point[0], point[1]]), {
-            color: 'blue',
-            weight: 3,
-            opacity: 0.7
+        // 1. Kamyon rotası (Mavi - Güney bölgesi güzergahı)
+        const route1Line = L.polyline(routes.truck1Route, {
+            color: '#007bff',
+            weight: 4,
+            opacity: 0.8,
+            smoothFactor: 1.0,
+            dashArray: '8, 4'
         }).addTo(map);
         
-        // Durak noktaları
-        routePoints.forEach((point, index) => {
-            const marker = L.marker([point[0], point[1]]).addTo(map);
-            marker.bindPopup(`<b>${point[2]}</b><br>Durak ${index + 1}`);
+        // 2. Kamyon rotası (Yeşil - Kuzey bölgesi güzergahı)  
+        const route2Line = L.polyline(routes.truck2Route, {
+            color: '#28a745',
+            weight: 4,
+            opacity: 0.8,
+            smoothFactor: 1.0,
+            dashArray: '8, 4'
+        }).addTo(map);
+        
+        // Bağlantı yolları
+        routes.connecting.forEach((connection, index) => {
+            L.polyline([[connection[0], connection[1]], [connection[2], connection[3]]], {
+                color: '#ffc107',
+                weight: 2,
+                opacity: 0.6,
+                dashArray: '4, 8'
+            }).addTo(map);
         });
         
-        // Mevcut konum
-        const currentLocation = L.marker([40.9862, 29.1244], {
+        // Güzergah etiketleri
+        L.marker([40.711000, 29.937000], {
             icon: L.divIcon({
-                className: 'custom-div-icon',
-                html: '<i class="fas fa-truck" style="color: red; font-size: 20px;"></i>',
-                iconSize: [20, 20],
-                iconAnchor: [10, 10]
+                className: 'street-label',
+                html: '<div class="street-label">1. Kamyon - Özel Güzergah</div>',
+                iconSize: [160, 20],
+                iconAnchor: [80, 10]
             })
         }).addTo(map);
-        currentLocation.bindPopup('<b>Mevcut Konum</b><br>Kadıköy Merkez');
+        
+        L.marker([40.707500, 29.930500], {
+            icon: L.divIcon({
+                className: 'street-label',
+                html: '<div class="street-label">2. Kamyon - Özel Güzergah</div>',
+                iconSize: [160, 20],
+                iconAnchor: [80, 10]
+            })
+        }).addTo(map);
+        
+        // Konteynır konumları - Görseldeki yuvarlak daireler
+        routes.containerLocations.forEach((location, index) => {
+            L.circleMarker([location[0], location[1]], {
+                color: '#dc3545',
+                fillColor: '#dc3545',
+                fillOpacity: 0.8,
+                radius: 5,
+                stroke: true,
+                weight: 2
+            }).addTo(map).bindPopup('<b>Konteynır ' + (index + 1) + '</b><br>Ağırlık: ' + Math.floor(Math.random() * 115 + 5) + ' kg');
+        });
+        
+        // Mevcut kamyon konumu
+        const currentTruck = L.marker([truckData.lat, truckData.lng], {
+            icon: L.divIcon({
+                className: 'custom-div-icon',
+                html: '<i class="fas fa-truck" style="color: #007bff; font-size: 24px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);"></i>',
+                iconSize: [30, 30],
+                iconAnchor: [15, 15]
+            })
+        }).addTo(map);
+        currentTruck.bindPopup('<b>' + truckData.name + '</b><br>' + truckData.location + '<br>Durum: ' + (truckData.status === 'active' ? 'Aktif' : 'Bakım'));
+        
+        // Diğer kamyon (varsayılan konum)
+        const otherTruckCoord = truckData.name === 'Kamyon-00001' ? [40.702874, 29.933797] : [40.713313, 29.932394];
+        const otherTruckColor = truckData.name === 'Kamyon-00001' ? '#28a745' : '#007bff';
+        const otherTruckName = truckData.name === 'Kamyon-00001' ? 'Kamyon-00002' : 'Kamyon-00001';
+        
+        const otherTruck = L.marker(otherTruckCoord, {
+            icon: L.divIcon({
+                className: 'custom-div-icon',
+                html: '<i class="fas fa-truck" style="color: ' + otherTruckColor + '; font-size: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);"></i>',
+                iconSize: [25, 25],
+                iconAnchor: [12, 12]
+            })
+        }).addTo(map);
+        otherTruck.bindPopup('<b>' + otherTruckName + '</b><br>Aktif');
+        
+        // Harita kontrol butonları
+        document.getElementById('showTruck1').addEventListener('click', function() {
+            map.setView([40.713313, 29.932394], 16);
+            this.classList.add('active');
+            document.getElementById('showTruck2').classList.remove('active');
+            document.getElementById('showBoth').classList.remove('active');
+        });
+        
+        document.getElementById('showTruck2').addEventListener('click', function() {
+            map.setView([40.702874, 29.933797], 16);
+            this.classList.add('active');
+            document.getElementById('showTruck1').classList.remove('active');
+            document.getElementById('showBoth').classList.remove('active');
+        });
+        
+        document.getElementById('showBoth').addEventListener('click', function() {
+            // İki kamyon arasındaki orta noktaya odaklan
+            const centerLat = (40.713313 + 40.702874) / 2;
+            const centerLng = (29.932394 + 29.933797) / 2;
+            map.setView([centerLat, centerLng], 14);
+            this.classList.add('active');
+            document.getElementById('showTruck1').classList.remove('active');
+            document.getElementById('showTruck2').classList.remove('active');
+        });
+
+        // Konteynır verileri (200 adet)
+        let containerData = [];
+        const locations = [
+            'Emir Sultan Caddesi No: 12', 'Emir Sultan Caddesi No: 24', 'Emir Sultan Caddesi No: 36',
+            'Millet Caddesi No: 8', 'Millet Caddesi No: 16', 'Millet Caddesi No: 28',
+            'Bahçelievler Mahallesi', 'Yenimahalle', 'Merkez Mahalle', 'Cumhuriyet Mahallesi',
+            'Atatürk Mahallesi', 'İstiklal Mahallesi', 'Fatih Mahallesi', 'Selimiye Mahallesi'
+        ];
+        const streets = ['Emir Sultan Caddesi', 'Millet Caddesi', 'Atatürk Caddesi', 'İstiklal Caddesi'];
+        const statuses = ['completed', 'in-progress', 'pending'];
+        const statusLabels = {'completed': 'Tamamlandı', 'in-progress': 'Devam Ediyor', 'pending': 'Bekliyor'};
+        const statusColors = {'completed': 'bg-success', 'in-progress': 'bg-warning', 'pending': 'bg-secondary'};
+
+        // 200 konteynır verisi oluştur
+        for (let i = 1; i <= 200; i++) {
+            const weight = Math.floor(Math.random() * (120 - 5 + 1)) + 5; // 5-120kg arası
+            const location = locations[Math.floor(Math.random() * locations.length)];
+            const street = streets[Math.floor(Math.random() * streets.length)];
+            const status = statuses[Math.floor(Math.random() * statuses.length)];
+            const truck = Math.random() > 0.5 ? 'Kamyon-00001' : 'Kamyon-00002';
+            
+            let arrivalTime = '-', departureTime = '-';
+            if (status === 'completed') {
+                const hour = Math.floor(Math.random() * 8) + 8; // 8-16 arası
+                const minute = Math.floor(Math.random() * 60);
+                arrivalTime = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+                departureTime = `${hour.toString().padStart(2, '0')}:${(minute + 15).toString().padStart(2, '0')}`;
+            } else if (status === 'in-progress') {
+                const hour = Math.floor(Math.random() * 2) + 14; // 14-16 arası
+                const minute = Math.floor(Math.random() * 60);
+                arrivalTime = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+            }
+
+            containerData.push({
+                id: i,
+                location: `${location} ${i}`,
+                street: street,
+                arrivalTime: arrivalTime,
+                departureTime: departureTime,
+                weight: weight,
+                truck: truck,
+                status: status
+            });
+        }
+
+        let filteredData = [...containerData];
+        let currentPage = 1;
+        const itemsPerPage = 20;
+
+        function renderTable() {
+            const tbody = document.getElementById('stopsTableBody');
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const pageData = filteredData.slice(startIndex, endIndex);
+
+            tbody.innerHTML = '';
+            pageData.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.id}</td>
+                    <td>${item.location}</td>
+                    <td>${item.street}</td>
+                    <td>${item.arrivalTime}</td>
+                    <td>${item.departureTime}</td>
+                    <td>${item.weight} kg</td>
+                    <td><span class="badge ${item.truck === 'Kamyon-00001' ? 'bg-primary' : 'bg-success'}">${item.truck}</span></td>
+                    <td><span class="badge ${statusColors[item.status]}">${statusLabels[item.status]}</span></td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            document.getElementById('totalCount').textContent = filteredData.length;
+            renderPagination();
+        }
+
+        function renderPagination() {
+            const pagination = document.getElementById('pagination');
+            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+            
+            pagination.innerHTML = '';
+            
+            // Önceki sayfa
+            const prevLi = document.createElement('li');
+            prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+            prevLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(${currentPage - 1})">Önceki</a>`;
+            pagination.appendChild(prevLi);
+            
+            // Sayfa numaraları
+            for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
+                const li = document.createElement('li');
+                li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+                li.innerHTML = `<a class="page-link" href="#" onclick="changePage(${i})">${i}</a>`;
+                pagination.appendChild(li);
+            }
+            
+            // Sonraki sayfa
+            const nextLi = document.createElement('li');
+            nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+            nextLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(${currentPage + 1})">Sonraki</a>`;
+            pagination.appendChild(nextLi);
+        }
+
+        function changePage(page) {
+            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+            if (page >= 1 && page <= totalPages) {
+                currentPage = page;
+                renderTable();
+            }
+        }
+
+        function applyFilters() {
+            const locationFilter = document.getElementById('locationFilter').value.toLowerCase();
+            const minWeight = parseInt(document.getElementById('minWeightFilter').value) || 5;
+            const maxWeight = parseInt(document.getElementById('maxWeightFilter').value) || 120;
+            const statusFilter = document.getElementById('statusFilter').value;
+
+            filteredData = containerData.filter(item => {
+                const matchesLocation = !locationFilter || item.location.toLowerCase().includes(locationFilter) || item.street.toLowerCase().includes(locationFilter);
+                const matchesWeight = item.weight >= minWeight && item.weight <= maxWeight;
+                const matchesStatus = !statusFilter || item.status === statusFilter;
+                
+                return matchesLocation && matchesWeight && matchesStatus;
+            });
+
+            currentPage = 1;
+            renderTable();
+        }
+
+        function clearFilters() {
+            document.getElementById('locationFilter').value = '';
+            document.getElementById('minWeightFilter').value = '';
+            document.getElementById('maxWeightFilter').value = '';
+            document.getElementById('statusFilter').value = '';
+            
+            filteredData = [...containerData];
+            currentPage = 1;
+            renderTable();
+        }
+
+        // İlk yükleme
+        renderTable();
     </script>
 </body>
 </html> 
