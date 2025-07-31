@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= truck.name %> - Çöp Kamyonu Detayları</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="/css/style.css" rel="stylesheet">
@@ -102,8 +103,7 @@
                     <div class="card-body">
                         <!-- Kamyon Görseli -->
                         <div class="text-center mb-4">
-                            <div class="truck-container-visual fullness-<%= Math.floor(truck.fullness / 10) * 10 %>"></div>
-                            <small class="text-muted">Doluluk: <%= truck.fullness %>% (<%= wasteWeight %> ton)</small>
+                            <div class="truck-container-visual fullness-<%= Math.floor(truck.fullness / 10) * 10 %>" data-truck-id="<%= truck.id %>"></div>
                         </div>
                         <div class="row mb-3">
                             <div class="col-6">
@@ -244,14 +244,8 @@
                             <i class="fas fa-map me-2"></i>
                             Kocaeli Başiskele - Canlı Konum ve Güzergah
                         </h5>
-                        <div class="btn-group btn-group-sm" role="group">
-                            <button type="button" class="btn btn-outline-primary active" id="showTruck1">
-                                <i class="fas fa-truck me-1" style="color: #007bff;"></i>Kamyon 1
-                            </button>
-                            <button type="button" class="btn btn-outline-success" id="showTruck2">
-                                <i class="fas fa-truck me-1" style="color: #28a745;"></i>Kamyon 2
-                            </button>
-                            <button type="button" class="btn btn-outline-secondary" id="showBoth">Her İkisi</button>
+                        <div class="btn-group btn-group-sm" role="group" id="mapControls">
+                            <!-- Butonlar JavaScript ile dinamik olarak eklenecek -->
                         </div>
                     </div>
                     <div class="card-body p-0">
@@ -274,7 +268,7 @@
                     <div class="card-header">
                         <h5 class="mb-0">
                             <i class="fas fa-map-marker-alt me-2"></i>
-                            Konteynır Noktaları ve Toplama Detayları
+                            <%= truck.name %> - Konteynır Noktaları ve Toplama Detayları
                         </h5>
                     </div>
                     <div class="card-body">
@@ -489,7 +483,8 @@
                 [40.710172, 29.923915],
                 [40.710945, 29.924004]
             ],
-            containerLocations: [
+            // Kamyon ID'sine göre konteynır konumları
+            truck1Containers: [
                 // 1. Kamyon güzergahı konteynırları - Yeni rota boyunca
                 [40.713200, 29.932400], [40.712900, 29.932430], [40.712600, 29.932450],
                 [40.712000, 29.932500], [40.711500, 29.932550], [40.711000, 29.932600],
@@ -499,8 +494,9 @@
                 [40.707500, 29.938500], [40.707400, 29.939500], [40.708500, 29.940200],
                 [40.709200, 29.941000], [40.709800, 29.942000], [40.711400, 29.940000],
                 [40.712300, 29.937800], [40.713500, 29.936700], [40.714200, 29.936600],
-                [40.714500, 29.940000], [40.713000, 29.941500], [40.711200, 29.942800],
-                
+                [40.714500, 29.940000], [40.713000, 29.941500], [40.711200, 29.942800]
+            ],
+            truck2Containers: [
                 // 2. Kamyon güzergahı konteynırları - Yeni güncellenen rota boyunca
                 [40.703000, 29.933700], [40.703600, 29.933400], [40.704000, 29.932500],
                 [40.704700, 29.932000], [40.705500, 29.932000], [40.707100, 29.932200],
@@ -514,55 +510,72 @@
             ]
         };
         
-        // 1. Kamyon rotası (Mavi - Güney bölgesi güzergahı)
-        const route1Line = L.polyline(routes.truck1Route, {
-            color: '#007bff',
-            weight: 4,
-            opacity: 0.8,
-            smoothFactor: 1.0,
-            dashArray: '8, 4'
-        }).addTo(map);
+        // Kamyon ID'sine göre güzergah göster
+        let route1Line, route2Line;
         
-        // 2. Kamyon rotası (Yeşil - Kuzey bölgesi güzergahı)  
-        const route2Line = L.polyline(routes.truck2Route, {
-            color: '#28a745',
-            weight: 4,
-            opacity: 0.8,
-            smoothFactor: 1.0,
-            dashArray: '8, 4'
-        }).addTo(map);
-        
-        // Bağlantı yolları
-        routes.connecting.forEach((connection, index) => {
-            L.polyline([[connection[0], connection[1]], [connection[2], connection[3]]], {
-                color: '#ffc107',
-                weight: 2,
-                opacity: 0.6,
-                dashArray: '4, 8'
+        if (truckData.id == 1 || truckData.name === 'Kamyon-00001') {
+            // 1. Kamyon detay sayfası - Sadece 1. kamyon güzergahı
+            route1Line = L.polyline(routes.truck1Route, {
+                color: '#007bff',
+                weight: 4,
+                opacity: 0.8,
+                smoothFactor: 1.0,
+                dashArray: '8, 4'
             }).addTo(map);
-        });
+            
+            // 1. Kamyon güzergah etiketi
+            L.marker([40.711000, 29.937000], {
+                icon: L.divIcon({
+                    className: 'street-label',
+                    html: '<div class="street-label">1. Kamyon - Özel Güzergah</div>',
+                    iconSize: [160, 20],
+                    iconAnchor: [80, 10]
+                })
+            }).addTo(map);
+            
+        } else if (truckData.id == 2 || truckData.name === 'Kamyon-00002') {
+            // 2. Kamyon detay sayfası - Sadece 2. kamyon güzergahı
+            route2Line = L.polyline(routes.truck2Route, {
+                color: '#28a745',
+                weight: 4,
+                opacity: 0.8,
+                smoothFactor: 1.0,
+                dashArray: '8, 4'
+            }).addTo(map);
+            
+            // 2. Kamyon güzergah etiketi
+            L.marker([40.707500, 29.930500], {
+                icon: L.divIcon({
+                    className: 'street-label',
+                    html: '<div class="street-label">2. Kamyon - Özel Güzergah</div>',
+                    iconSize: [160, 20],
+                    iconAnchor: [80, 10]
+                })
+            }).addTo(map);
+            
+        } else {
+            // Diğer kamyonlar için güzergah gösterme, sadece kamyon ikonu
+            console.log('Bu kamyon için güzergah tanımlanmamış');
+        }
         
-        // Güzergah etiketleri
-        L.marker([40.711000, 29.937000], {
-            icon: L.divIcon({
-                className: 'street-label',
-                html: '<div class="street-label">1. Kamyon - Özel Güzergah</div>',
-                iconSize: [160, 20],
-                iconAnchor: [80, 10]
-            })
-        }).addTo(map);
+        // Konteynır konumları - Kamyon ID'sine göre göster
+        let mapContainerLocations = [];
         
-        L.marker([40.707500, 29.930500], {
-            icon: L.divIcon({
-                className: 'street-label',
-                html: '<div class="street-label">2. Kamyon - Özel Güzergah</div>',
-                iconSize: [160, 20],
-                iconAnchor: [80, 10]
-            })
-        }).addTo(map);
+        if (truckData.id == 1 || truckData.name === 'Kamyon-00001') {
+            mapContainerLocations = routes.truck1Containers;
+        } else if (truckData.id == 2 || truckData.name === 'Kamyon-00002') {
+            mapContainerLocations = routes.truck2Containers;
+        } else {
+            // Diğer kamyonlar için rastgele konteynır noktaları
+            mapContainerLocations = [
+                [truckData.lat + 0.001, truckData.lng + 0.001],
+                [truckData.lat - 0.001, truckData.lng + 0.002],
+                [truckData.lat + 0.002, truckData.lng - 0.001],
+                [truckData.lat - 0.002, truckData.lng - 0.002]
+            ];
+        }
         
-        // Konteynır konumları - Görseldeki yuvarlak daireler
-        routes.containerLocations.forEach((location, index) => {
+        mapContainerLocations.forEach((location, index) => {
             L.circleMarker([location[0], location[1]], {
                 color: '#dc3545',
                 fillColor: '#dc3545',
@@ -584,45 +597,47 @@
         }).addTo(map);
         currentTruck.bindPopup('<b>' + truckData.name + '</b><br>' + truckData.location + '<br>Durum: ' + (truckData.status === 'active' ? 'Aktif' : 'Bakım'));
         
-        // Diğer kamyon (varsayılan konum)
-        const otherTruckCoord = truckData.name === 'Kamyon-00001' ? [40.702874, 29.933797] : [40.713313, 29.932394];
-        const otherTruckColor = truckData.name === 'Kamyon-00001' ? '#28a745' : '#007bff';
-        const otherTruckName = truckData.name === 'Kamyon-00001' ? 'Kamyon-00002' : 'Kamyon-00001';
+        // Diğer kamyonları gösterme - Sadece mevcut kamyon görünsün
         
-        const otherTruck = L.marker(otherTruckCoord, {
-            icon: L.divIcon({
-                className: 'custom-div-icon',
-                html: '<i class="fas fa-truck" style="color: ' + otherTruckColor + '; font-size: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);"></i>',
-                iconSize: [25, 25],
-                iconAnchor: [12, 12]
-            })
-        }).addTo(map);
-        otherTruck.bindPopup('<b>' + otherTruckName + '</b><br>Aktif');
+        // Harita kontrol butonları - Sadece mevcut kamyon için
+        const mapControls = document.getElementById('mapControls');
         
-        // Harita kontrol butonları
-        document.getElementById('showTruck1').addEventListener('click', function() {
-            map.setView([40.713313, 29.932394], 16);
-            this.classList.add('active');
-            document.getElementById('showTruck2').classList.remove('active');
-            document.getElementById('showBoth').classList.remove('active');
-        });
-        
-        document.getElementById('showTruck2').addEventListener('click', function() {
-            map.setView([40.702874, 29.933797], 16);
-            this.classList.add('active');
-            document.getElementById('showTruck1').classList.remove('active');
-            document.getElementById('showBoth').classList.remove('active');
-        });
-        
-        document.getElementById('showBoth').addEventListener('click', function() {
-            // İki kamyon arasındaki orta noktaya odaklan
-            const centerLat = (40.713313 + 40.702874) / 2;
-            const centerLng = (29.932394 + 29.933797) / 2;
-            map.setView([centerLat, centerLng], 14);
-            this.classList.add('active');
-            document.getElementById('showTruck1').classList.remove('active');
-            document.getElementById('showTruck2').classList.remove('active');
-        });
+        if (truckData.id == 1 || truckData.name === 'Kamyon-00001') {
+            // 1. kamyon için buton
+            mapControls.innerHTML = `
+                <button type="button" class="btn btn-outline-primary active" id="showCurrentTruck">
+                    <i class="fas fa-truck me-1" style="color: #007bff;"></i>Bu Kamyon
+                </button>
+            `;
+            
+            document.getElementById('showCurrentTruck').addEventListener('click', function() {
+                map.setView([truckData.lat, truckData.lng], 16);
+            });
+            
+        } else if (truckData.id == 2 || truckData.name === 'Kamyon-00002') {
+            // 2. kamyon için buton
+            mapControls.innerHTML = `
+                <button type="button" class="btn btn-outline-success active" id="showCurrentTruck">
+                    <i class="fas fa-truck me-1" style="color: #28a745;"></i>Bu Kamyon
+                </button>
+            `;
+            
+            document.getElementById('showCurrentTruck').addEventListener('click', function() {
+                map.setView([truckData.lat, truckData.lng], 16);
+            });
+            
+        } else {
+            // Diğer kamyonlar için sadece "Bu Kamyon" butonu
+            mapControls.innerHTML = `
+                <button type="button" class="btn btn-outline-secondary active" id="showCurrentTruck">
+                    <i class="fas fa-truck me-1" style="color: #6c757d;"></i>Bu Kamyon
+                </button>
+            `;
+            
+            document.getElementById('showCurrentTruck').addEventListener('click', function() {
+                map.setView([truckData.lat, truckData.lng], 16);
+            });
+        }
 
         // Konteynır verileri (200 adet)
         let containerData = [];
@@ -637,13 +652,73 @@
         const statusLabels = {'completed': 'Tamamlandı', 'in-progress': 'Devam Ediyor', 'pending': 'Bekliyor'};
         const statusColors = {'completed': 'bg-success', 'in-progress': 'bg-warning', 'pending': 'bg-secondary'};
 
-        // 200 konteynır verisi oluştur
-        for (let i = 1; i <= 200; i++) {
+        // Kamyon ID'sine göre konteynır verisi oluştur
+        const currentTruckName = truckData.name;
+        const currentTruckId = truckData.id;
+        
+        // Haritadaki konteynır noktalarına göre veri oluştur
+        let containerLocations = [];
+        if (currentTruckId == 1 || currentTruckName === 'Kamyon-00001') {
+            containerLocations = routes.truck1Containers;
+        } else if (currentTruckId == 2 || currentTruckName === 'Kamyon-00002') {
+            containerLocations = routes.truck2Containers;
+        } else {
+            // Diğer kamyonlar için rastgele konteynır noktaları
+            containerLocations = [
+                [truckData.lat + 0.001, truckData.lng + 0.001],
+                [truckData.lat - 0.001, truckData.lng + 0.002],
+                [truckData.lat + 0.002, truckData.lng - 0.001],
+                [truckData.lat - 0.002, truckData.lng - 0.002]
+            ];
+        }
+        
+        // Konteynır noktalarına göre veri oluştur
+        containerLocations.forEach((location, index) => {
             const weight = Math.floor(Math.random() * (120 - 5 + 1)) + 5; // 5-120kg arası
-            const location = locations[Math.floor(Math.random() * locations.length)];
-            const street = streets[Math.floor(Math.random() * streets.length)];
             const status = statuses[Math.floor(Math.random() * statuses.length)];
-            const truck = Math.random() > 0.5 ? 'Kamyon-00001' : 'Kamyon-00002';
+            
+            // Kamyon ID'sine göre truck belirle
+            let truck;
+            if (currentTruckId == 1 || currentTruckName === 'Kamyon-00001') {
+                truck = 'Kamyon-00001';
+            } else if (currentTruckId == 2 || currentTruckName === 'Kamyon-00002') {
+                truck = 'Kamyon-00002';
+            } else {
+                // Diğer kamyonlar için kendi adını kullan
+                truck = currentTruckName;
+            }
+            
+            // Konum ve cadde isimleri - haritadaki koordinatlara göre
+            let locationName, streetName;
+            if (currentTruckId == 1 || currentTruckName === 'Kamyon-00001') {
+                // 1. kamyon güzergahı konumları
+                const truck1Locations = [
+                    'Emir Sultan Caddesi No: 12', 'Emir Sultan Caddesi No: 24', 'Emir Sultan Caddesi No: 36',
+                    'Millet Caddesi No: 8', 'Millet Caddesi No: 16', 'Millet Caddesi No: 28',
+                    'Bahçelievler Mahallesi', 'Yenimahalle', 'Merkez Mahalle', 'Cumhuriyet Mahallesi',
+                    'Atatürk Mahallesi', 'İstiklal Mahallesi', 'Fatih Mahallesi', 'Selimiye Mahallesi',
+                    'Emir Sultan Caddesi No: 48', 'Emir Sultan Caddesi No: 60', 'Emir Sultan Caddesi No: 72',
+                    'Millet Caddesi No: 40', 'Millet Caddesi No: 52', 'Millet Caddesi No: 64',
+                    'Bahçelievler Mahallesi 2', 'Yenimahalle 2', 'Merkez Mahalle 2', 'Cumhuriyet Mahallesi 2',
+                    'Atatürk Mahallesi 2', 'İstiklal Mahallesi 2', 'Fatih Mahallesi 2', 'Selimiye Mahallesi 2'
+                ];
+                locationName = truck1Locations[index] || `Konteynır Noktası ${index + 1}`;
+                streetName = 'Emir Sultan Caddesi';
+            } else if (currentTruckId == 2 || currentTruckName === 'Kamyon-00002') {
+                // 2. kamyon güzergahı konumları
+                const truck2Locations = [
+                    'Atatürk Caddesi No: 15', 'Atatürk Caddesi No: 27', 'Atatürk Caddesi No: 39',
+                    'İstiklal Caddesi No: 11', 'İstiklal Caddesi No: 23', 'İstiklal Caddesi No: 35',
+                    'Cumhuriyet Mahallesi', 'Fatih Mahallesi', 'Selimiye Mahallesi', 'Yeni Mahalle',
+                    'Merkez Mahallesi', 'Bahçelievler Mahallesi', 'Yenimahalle', 'Atatürk Mahallesi'
+                ];
+                locationName = truck2Locations[index] || `Konteynır Noktası ${index + 1}`;
+                streetName = 'Atatürk Caddesi';
+            } else {
+                // Diğer kamyonlar için
+                locationName = `${currentTruckName} Konteynır Noktası ${index + 1}`;
+                streetName = 'Genel Cadde';
+            }
             
             let arrivalTime = '-', departureTime = '-';
             if (status === 'completed') {
@@ -658,16 +733,16 @@
             }
 
             containerData.push({
-                id: i,
-                location: `${location} ${i}`,
-                street: street,
+                id: index + 1,
+                location: locationName,
+                street: streetName,
                 arrivalTime: arrivalTime,
                 departureTime: departureTime,
                 weight: weight,
                 truck: truck,
                 status: status
             });
-        }
+        });
 
         let filteredData = [...containerData];
         let currentPage = 1;
@@ -689,7 +764,7 @@
                     <td>${item.arrivalTime}</td>
                     <td>${item.departureTime}</td>
                     <td>${item.weight} kg</td>
-                    <td><span class="badge ${item.truck === 'Kamyon-00001' ? 'bg-primary' : 'bg-success'}">${item.truck}</span></td>
+                    <td><span class="badge ${item.truck === 'Kamyon-00001' ? 'bg-primary' : item.truck === 'Kamyon-00002' ? 'bg-success' : 'bg-secondary'}">${item.truck}</span></td>
                     <td><span class="badge ${statusColors[item.status]}">${statusLabels[item.status]}</span></td>
                 `;
                 tbody.appendChild(row);
@@ -708,22 +783,28 @@
             // Önceki sayfa
             const prevLi = document.createElement('li');
             prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
-            prevLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(${currentPage - 1})">Önceki</a>`;
+            prevLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(${currentPage - 1}); return false;">Önceki</a>`;
             pagination.appendChild(prevLi);
             
             // Sayfa numaraları
             for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
                 const li = document.createElement('li');
                 li.className = `page-item ${i === currentPage ? 'active' : ''}`;
-                li.innerHTML = `<a class="page-link" href="#" onclick="changePage(${i})">${i}</a>`;
+                li.innerHTML = `<a class="page-link" href="#" onclick="changePage(${i}); return false;">${i}</a>`;
                 pagination.appendChild(li);
             }
             
             // Sonraki sayfa
             const nextLi = document.createElement('li');
             nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
-            nextLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(${currentPage + 1})">Sonraki</a>`;
+            nextLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(${currentPage + 1}); return false;">Sonraki</a>`;
             pagination.appendChild(nextLi);
+            
+            // Sayfa bilgisi
+            const pageInfo = document.createElement('div');
+            pageInfo.className = 'text-center mt-2';
+            pageInfo.innerHTML = `<small class="text-muted">Sayfa ${currentPage} / ${totalPages}</small>`;
+            pagination.appendChild(pageInfo);
         }
 
         function changePage(page) {

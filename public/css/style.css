@@ -4,7 +4,7 @@ body {
     background-color: #f8f9fa;
 }
 
-/* Yeni Basit ve Etkili Kamyon Doluluk Sistemi */
+/* Yeni Kamyon Görsel Sistemi */
 
 /* Kamyon Wrapper - Küçük (Dashboard kartları için) */
 .truck-visual-small {
@@ -36,45 +36,57 @@ body {
     height: auto;
 }
 
-/* Kamyon Kasa Dolgusu - Alt hizalı, yükseklik dinamik */
-.truck-fill {
+/* Doluluk Badge'i - Kamyon görselinin üzerinde */
+.fullness-badge {
     position: absolute;
-    bottom: 32%;      /* Kamyon kasasının alt kısmı - görselinize göre ayarlandı */
-    left: 47%;        /* Kasa sol kenarı - görselinize göre ayarlandı */
-    width: 26%;       /* Kasa genişliği - görselinize göre ayarlandı */
-    background-color: rgba(76, 175, 80, 0.7); /* Varsayılan yeşil */
+    top: 5px;
+    right: 5px;
+    background-color: rgba(76, 175, 80, 0.9);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: bold;
     pointer-events: none;
     transition: all 0.8s ease-in-out;
-    border-radius: 1px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+/* Büyük kamyon görseli için badge boyutu */
+.truck-container-visual .fullness-badge {
+    font-size: 12px;
+    padding: 4px 8px;
+    top: 10px;
+    right: 10px;
 }
 
 /* Doluluk Oranına Göre Renk Sistemi */
-.truck-fill.low-fill {
-    background-color: rgba(76, 175, 80, 0.7); /* Yeşil - Az dolu */
+.fullness-badge.low-fill {
+    background-color: rgba(76, 175, 80, 0.9); /* Yeşil - Az dolu */
 }
 
-.truck-fill.medium-fill {
-    background-color: rgba(255, 152, 0, 0.7); /* Turuncu - Orta dolu */
+.fullness-badge.medium-fill {
+    background-color: rgba(255, 152, 0, 0.9); /* Turuncu - Orta dolu */
 }
 
-.truck-fill.high-fill {
-    background-color: rgba(255, 87, 34, 0.7); /* Turuncu-kırmızı - Çok dolu */
+.fullness-badge.high-fill {
+    background-color: rgba(255, 87, 34, 0.9); /* Turuncu-kırmızı - Çok dolu */
 }
 
-.truck-fill.critical-fill {
-    background-color: rgba(244, 67, 54, 0.8); /* Kırmızı - Kritik seviye */
+.fullness-badge.critical-fill {
+    background-color: rgba(244, 67, 54, 0.95); /* Kırmızı - Kritik seviye */
     animation: critical-warning 2s ease-in-out infinite;
 }
 
 /* Kritik seviye animasyonu */
 @keyframes critical-warning {
     0%, 100% { 
-        background-color: rgba(244, 67, 54, 0.8);
+        background-color: rgba(244, 67, 54, 0.95);
         transform: scale(1);
     }
     50% { 
-        background-color: rgba(255, 23, 68, 0.9);
-        transform: scale(1.02);
+        background-color: rgba(255, 23, 68, 0.95);
+        transform: scale(1.1);
     }
 }
 
@@ -245,9 +257,10 @@ body {
 }
 
 .pagination .page-item.active .page-link {
-    background-color: #007bff;
-    border-color: #007bff;
-    box-shadow: 0 2px 4px rgba(0,123,255,0.3);
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+    color: #495057;
+    box-shadow: none;
 }
 
 .pagination .page-item.disabled .page-link {
