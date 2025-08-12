@@ -13,8 +13,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Session middleware
 app.use(session({
     secret: 'garbage-truck-secret-key',
-    resave: false,
-    saveUninitialized: false,
+    resave: true,
+    saveUninitialized: true,
     cookie: { secure: false }
 }));
 
