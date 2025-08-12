@@ -5,6 +5,21 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Security headers
+app.use((req, res, next) => {
+    // Permissions-Policy hatalarını engellemek için
+    res.setHeader('Permissions-Policy', 
+        'browsing-topics=(), ' +
+        'run-ad-auction=(), ' +
+        'join-ad-interest-group=(), ' +
+        'private-state-token-redemption=(), ' +
+        'private-state-token-issuance=(), ' +
+        'private-aggregation=(), ' +
+        'attribution-reporting=()'
+    );
+    next();
+});
+
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -12,10 +27,17 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Session middleware
 app.use(session({
-    secret: 'garbage-truck-secret-key',
+    secret: process.env.SESSION_SECRET || 'garbage-truck-secret-key-thresh-project-2024',
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false }
+    name: 'thresh.session.id', // Custom session name
+    cookie: { 
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000, // 24 saat
+        sameSite: process.env.NODE_ENV === 'production' ? 'lax' : 'lax' // none yerine lax kullan
+    },
+    rolling: true // Her request'te cookie'yi yenile
 }));
 
 // View engine

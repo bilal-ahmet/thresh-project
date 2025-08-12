@@ -4,9 +4,16 @@ const truckController = require('../controllers/truckController');
 
 // Middleware - Authentication kontrolü
 const requireAuth = (req, res, next) => {
-    if (!req.session.isAuthenticated) {
+    console.log('Session data:', req.session);
+    console.log('IsAuthenticated:', req.session.isAuthenticated);
+    console.log('User:', req.session.user);
+    
+    if (!req.session.isAuthenticated || !req.session.user) {
+        console.log('Authentication failed, redirecting to login');
         return res.redirect('/auth/login');
     }
+    
+    console.log('Authentication successful');
     next();
 };
 
