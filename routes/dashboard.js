@@ -4,7 +4,6 @@ const truckController = require('../controllers/truckController');
 
 // Middleware - Authentication kontrolü
 const requireAuth = (req, res, next) => {
-    console.log('Session state in requireAuth:', req.session); // Debugging
     if (!req.session.isAuthenticated) {
         return res.redirect('/auth/login');
     }
