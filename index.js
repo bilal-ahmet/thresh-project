@@ -15,7 +15,11 @@ app.use(session({
     secret: 'garbage-truck-secret-key',
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false }
+    cookie: { 
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000 // 24 saat
+    }
 }));
 
 // View engine
