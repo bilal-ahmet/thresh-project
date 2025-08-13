@@ -387,7 +387,7 @@ const getAllTrucks = (req, res) => {
     const dailyStats = getDailyStats();
     
     res.render('dashboard/index', { 
-        user: req.session.user,
+        user: req.user,
         trucks: trucks,
         activeTrucks: activeTrucks.length,
         averageFullness: averageFullness,
@@ -414,7 +414,7 @@ const getTruckDetails = (req, res) => {
     const routes = getBasiskeleRoutes();
     
     res.render('dashboard/truck-details', { 
-        user: req.session.user,
+        user: req.user,
         truck: truck,
         wasteWeight: (wasteWeight / 1000).toFixed(1), // ton cinsinden göster (çok küçük olacak)
         wasteWeightKg: wasteWeight.toFixed(0), // kg cinsinden

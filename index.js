@@ -1,9 +1,13 @@
 const express = require('express');
 const cookieParser = require('cookie-parser');
+const jwt = require('jsonwebtoken');
 const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// JWT secret key
+const JWT_SECRET = process.env.JWT_SECRET || 'thresh-project-jwt-secret-key-2024';
 
 // Security headers
 app.use((req, res, next) => {
@@ -63,8 +67,6 @@ app.get('/', (req, res) => {
         const token = req.cookies.authToken;
         if (token) {
             try {
-                const jwt = require('jsonwebtoken');
-                const JWT_SECRET = process.env.JWT_SECRET || 'thresh-project-jwt-secret-key-2024';
                 jwt.verify(token, JWT_SECRET);
                 console.log('User authenticated, redirecting to dashboard');
                 res.redirect('/dashboard');
