@@ -1,5 +1,5 @@
 const express = require('express');
-const session = require('express-session');
+const cookieParser = require('cookie-parser');
 const path = require('path');
 
 const app = express();
@@ -23,22 +23,8 @@ app.use((req, res, next) => {
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser()); // Cookie parser middleware
 app.use(express.static(path.join(__dirname, 'public')));
-
-// Session middleware
-app.use(session({
-    secret: process.env.SESSION_SECRET || 'garbage-truck-secret-key-thresh-project-2024',
-    resave: false,
-    saveUninitialized: false,
-    name: 'thresh.session.id', // Custom session name
-    cookie: { 
-        secure: process.env.NODE_ENV === 'production',
-        httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000, // 24 saat
-        sameSite: process.env.NODE_ENV === 'production' ? 'lax' : 'lax' // none yerine lax kullan
-    },
-    rolling: true // Her request'te cookie'yi yenile
-}));
 
 // View engine
 app.set('view engine', 'ejs');
@@ -73,13 +59,23 @@ app.get('/test', (req, res) => {
 app.get('/', (req, res) => {
     console.log('Root route accessed');
     try {
-        if (req.session.isAuthenticated) {
-            console.log('User authenticated, redirecting to dashboard');
-            res.redirect('/dashboard');
-        } else {
-            console.log('User not authenticated, redirecting to login');
-            res.redirect('/auth/login');
+        // JWT token kontrolü
+        const token = req.cookies.authToken;
+        if (token) {
+            try {
+                const jwt = require('jsonwebtoken');
+                const JWT_SECRET = process.env.JWT_SECRET || 'thresh-project-jwt-secret-key-2024';
+                jwt.verify(token, JWT_SECRET);
+                console.log('User authenticated, redirecting to dashboard');
+                res.redirect('/dashboard');
+                return;
+            } catch (error) {
+                console.log('Invalid token, redirecting to login');
+                res.clearCookie('authToken');
+            }
         }
+        console.log('User not authenticated, redirecting to login');
+        res.redirect('/auth/login');
     } catch (error) {
         console.error('Error in root route:', error.message);
         res.status(500).send('Error in root route');

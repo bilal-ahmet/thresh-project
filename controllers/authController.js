@@ -1,3 +1,8 @@
+const jwt = require('jsonwebtoken');
+
+// JWT secret key
+const JWT_SECRET = process.env.JWT_SECRET || 'thresh-project-jwt-secret-key-2024';
+
 // Auth Controller
 const login = (req, res) => {
     const { username, password } = req.body;
@@ -9,38 +14,57 @@ const login = (req, res) => {
     };
     
     if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
-        req.session.isAuthenticated = true;
-        req.session.user = { 
-            username: username,
-            loginTime: new Date().toISOString()
-        };
+        // JWT token oluştur
+        const token = jwt.sign(
+            { 
+                username: username,
+                loginTime: new Date().toISOString()
+            },
+            JWT_SECRET,
+            { expiresIn: '24h' }
+        );
         
-        // Session'ı kaydet ve bekle
-        req.session.save((err) => {
-            if (err) {
-                console.error('Session save error:', err);
-                return res.render('auth/login', { error: 'Oturum açma hatası!' });
-            }
-            console.log('Session saved successfully:', req.session);
-            res.redirect('/dashboard');
+        // Token'ı cookie olarak set et
+        res.cookie('authToken', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 24 * 60 * 60 * 1000, // 24 saat
+            sameSite: 'lax'
         });
+        
+        console.log('Login successful, token created');
+        res.redirect('/dashboard');
     } else {
         res.render('auth/login', { error: 'Geçersiz kullanıcı adı veya şifre!' });
     }
 };
 
 const logout = (req, res) => {
-    req.session.destroy((err) => {
-        if (err) {
-            console.error('Session destroy error:', err);
-        }
-        res.clearCookie('thresh.session.id'); // custom session cookie'yi temizle
-        res.clearCookie('connect.sid'); // fallback için default session cookie'yi de temizle
+    res.clearCookie('authToken');
+    res.redirect('/auth/login');
+};
+
+// JWT token doğrulama fonksiyonu
+const verifyToken = (req, res, next) => {
+    const token = req.cookies.authToken;
+    
+    if (!token) {
+        return res.redirect('/auth/login');
+    }
+    
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        req.user = decoded;
+        next();
+    } catch (error) {
+        console.error('Token verification failed:', error.message);
+        res.clearCookie('authToken');
         res.redirect('/auth/login');
-    });
+    }
 };
 
 module.exports = {
     login,
-    logout
+    logout,
+    verifyToken
 };

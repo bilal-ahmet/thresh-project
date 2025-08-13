@@ -1,20 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const truckController = require('../controllers/truckController');
+const { verifyToken } = require('../controllers/authController');
 
-// Middleware - Authentication kontrolü
+// Middleware - JWT Authentication kontrolü
 const requireAuth = (req, res, next) => {
-    console.log('Session data:', req.session);
-    console.log('IsAuthenticated:', req.session.isAuthenticated);
-    console.log('User:', req.session.user);
+    console.log('Checking JWT authentication...');
     
-    if (!req.session.isAuthenticated || !req.session.user) {
-        console.log('Authentication failed, redirecting to login');
-        return res.redirect('/auth/login');
-    }
-    
-    console.log('Authentication successful');
-    next();
+    // verifyToken middleware'ini kullan
+    verifyToken(req, res, next);
 };
 
 // Tüm route'larda authentication kontrolü
